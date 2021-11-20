@@ -1,19 +1,19 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
 func main() {
-	t, err := GetFixedData(http.DefaultClient)
+	terms, subjects, ges, err := GetFixedData(http.DefaultClient)
 
 	if err != nil {
 		panic(err)
 	}
 
-	v, _ := json.Marshal(t)
+	fmt.Println(terms[0])
+	fmt.Println(subjects[0])
+	fmt.Println(ges[0])
 
-	fmt.Println(string(v))
 }

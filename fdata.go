@@ -21,12 +21,12 @@ type Option struct {
 	// Default bool   `json:"default"`
 }
 
-// GetFixedData returns the current terms, subjects, and GE categories in the form of a map with keys "terms", "subjects", and "ges" and values []string.
-func GetFixedData(c *http.Client) (map[string][]*Option, error) {
+// GetFixedData returns the current terms, subjects, and GE categories.
+func GetFixedData(c *http.Client) (terms []*Option, subjects []*Option, ges []*Option, err error) {
 	resp, err := c.Get("https://pisa.ucsc.edu/class_search/index.php")
 
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
 	defer resp.Body.Close()
@@ -60,7 +60,7 @@ func GetFixedData(c *http.Client) (map[string][]*Option, error) {
 				break
 			}
 
-			return nil, e
+			return nil, nil, nil, e
 		case html.CommentToken:
 			ctxt := strings.Trim(string(z.Text()), " ")
 
@@ -122,5 +122,5 @@ func GetFixedData(c *http.Client) (map[string][]*Option, error) {
 		}
 	}
 
-	return fixedData, nil
+	return fixedData["terms"], fixedData["subjects"], fixedData["ges"], nil
 }
