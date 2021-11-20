@@ -1,2 +1,2 @@
 # ucscclasses
-Retrieve UC Santa Cruz course information
+> Retrieve UC Santa Cruz course information
