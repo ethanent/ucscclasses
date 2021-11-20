@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	t, err := GetTerms(http.DefaultClient)
+	t, err := GetFixedData(http.DefaultClient)
 
 	if err != nil {
 		panic(err)
