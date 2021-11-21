@@ -23,18 +23,21 @@ type DiscussionSection struct {
 
 type ClassDetails struct {
 	// AKA ClassNumber (not to be confused with number for search.
-	ID                 string
-	Name               string
-	Status             ClassStatus
-	Capacity           int
-	Enrolled           int
-	WaitlistTotal      int
-	WaitlistCapacity   int
-	Career             string
-	Description        string
-	ClassNotes         string
-	Units              int
-	Type               string
+	ID               string
+	Name             string
+	Status           ClassStatus
+	Capacity         int
+	Enrolled         int
+	WaitlistTotal    int
+	WaitlistCapacity int
+	Career           string
+	Description      string
+	ClassNotes       string
+	Units            int
+
+	// Observed types have been "Lecture" and "Seminar"
+	Type string
+
 	GE                 string
 	Location           string
 	TimeDay            string
@@ -123,11 +126,11 @@ func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
 	tds := doc.Find("td")
 
 	details.Type = dds.Eq(3).Text()
-	details.GE = dds.Eq(5).Text()
-	details.Location = tds.Eq(1).Text()
-	details.TimeDay = tds.Eq(0).Text()
-	details.Instructor = tds.Eq(2).Text()
-	details.MeetingDates = tds.Eq(3).Text()
+	details.GE = cleanString(dds.Eq(5).Text())
+	details.Location = cleanString(tds.Eq(1).Text())
+	details.TimeDay = cleanString(tds.Eq(0).Text())
+	details.Instructor = cleanString(tds.Eq(2).Text())
+	details.MeetingDates = cleanString(tds.Eq(3).Text())
 
 	rss := doc.Find(".row-striped")
 

@@ -105,7 +105,7 @@ func SearchClasses(c *http.Client, term string, subject string, number string) (
 
 		title := s.Find("h2 > a")
 
-		cbi.Name = multispaceRegex.ReplaceAllString(title.Text(), " ")
+		cbi.Name = cleanString(title.Text())
 
 		enrolledText := s.Find("div.row").Children().Eq(3).Text()
 
