@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 type DiscussionSection struct {
@@ -111,6 +112,14 @@ func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
 	details.Description = cleanString(pbs.Eq(2).Text())
 	details.EnrollmentRequirements = cleanString(pbs.Eq(3).Text())
 	details.ClassNotes = cleanString(pbs.Eq(4).Text())
+
+	if strings.Index(details.EnrollmentRequirements, "Days Times Room Instructor") == 0 {
+		details.EnrollmentRequirements = ""
+	}
+
+	if strings.Index(details.ClassNotes, "Days Times Room Instructor") == 0 {
+		details.EnrollmentRequirements = ""
+	}
 
 	unitsStr := dds.Eq(4).Text()
 	unitsRegexRes := unitsRegex.FindStringSubmatch(unitsStr)
