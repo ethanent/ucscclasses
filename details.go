@@ -118,7 +118,7 @@ func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
 	}
 
 	if strings.Index(details.ClassNotes, "Days Times Room Instructor") == 0 {
-		details.EnrollmentRequirements = ""
+		details.ClassNotes = ""
 	}
 
 	unitsStr := dds.Eq(4).Text()
