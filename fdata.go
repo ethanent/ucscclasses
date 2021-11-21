@@ -1,4 +1,4 @@
-package main
+package ucscclasses
 
 import (
 	"golang.org/x/net/html"

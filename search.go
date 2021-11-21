@@ -1,4 +1,4 @@
-package main
+package ucscclasses
 
 import (
 	"github.com/PuerkitoBio/goquery"
