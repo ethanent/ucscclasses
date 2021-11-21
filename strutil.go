@@ -9,7 +9,7 @@ import (
 var numberRegex = regexp.MustCompile(`[0-9]+`)
 var multispaceRegex = regexp.MustCompile(`(?:\s){2,}`)
 var prefixRegex = regexp.MustCompile(`[A-Za-z0-9]: (.+)`)
-var unexpectedCharsRegex = regexp.MustCompile(`[^A-Za-z0-9_\-:"() ']`)
+var unexpectedCharsRegex = regexp.MustCompile(`[^A-Za-z0-9_\-:"() ,./']`)
 
 func stringSubmatchNoError(s string, r *regexp.Regexp) string {
 	sm := r.FindStringSubmatch(s)
