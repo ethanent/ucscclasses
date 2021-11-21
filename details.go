@@ -23,17 +23,18 @@ type DiscussionSection struct {
 
 type ClassDetails struct {
 	// AKA ClassNumber (not to be confused with number for search.
-	ID               string
-	Name             string
-	Status           ClassStatus
-	Capacity         int
-	Enrolled         int
-	WaitlistTotal    int
-	WaitlistCapacity int
-	Career           string
-	Description      string
-	ClassNotes       string
-	Units            int
+	ID                     string
+	Name                   string
+	Status                 ClassStatus
+	Capacity               int
+	Enrolled               int
+	WaitlistTotal          int
+	WaitlistCapacity       int
+	Career                 string
+	Description            string
+	EnrollmentRequirements string
+	ClassNotes             string
+	Units                  int
 
 	// Observed types have been "Lecture" and "Seminar"
 	Type string
@@ -108,7 +109,8 @@ func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
 
 	details.Career = dds.Eq(0).Text()
 	details.Description = cleanString(pbs.Eq(2).Text())
-	details.ClassNotes = cleanString(pbs.Eq(3).Text())
+	details.EnrollmentRequirements = cleanString(pbs.Eq(3).Text())
+	details.ClassNotes = cleanString(pbs.Eq(4).Text())
 
 	unitsStr := dds.Eq(4).Text()
 	unitsRegexRes := unitsRegex.FindStringSubmatch(unitsStr)
