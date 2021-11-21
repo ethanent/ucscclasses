@@ -4,7 +4,6 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"net/http"
 	"net/url"
-	"regexp"
 	"strconv"
 )
 
@@ -16,7 +15,14 @@ const (
 	ClassStatusClosed         ClassStatus = "Closed"
 )
 
+var statusStrStatusMap = map[string]ClassStatus{
+	"Open":      ClassStatusOpen,
+	"Wait List": ClassStatusClosedWaitlist,
+	"Closed":    ClassStatusClosed,
+}
+
 type ClassBriefInfo struct {
+	// AKA ClassNumber (not to be confused with number for search)
 	ID         string
 	DetailsURL string
 	Name       string
@@ -25,21 +31,7 @@ type ClassBriefInfo struct {
 	Instructor string
 	Status     ClassStatus
 	Enrolled   int
-	Spaces     int
-}
-
-var numberRegex = regexp.MustCompile(`[0-9]+`)
-var multispaceRegex = regexp.MustCompile(`(?:\s){2,}`)
-var prefixRegex = regexp.MustCompile(`[A-Za-z0-9]: (.+)`)
-
-func stringSubmatchNoError(s string, r *regexp.Regexp) string {
-	sm := r.FindStringSubmatch(s)
-
-	if sm == nil || len(sm) < 2 {
-		return ""
-	} else {
-		return sm[1]
-	}
+	Capacity   int
 }
 
 func SearchClasses(c *http.Client, term string, subject string, number string) ([]*ClassBriefInfo, error) {
@@ -104,11 +96,12 @@ func SearchClasses(c *http.Client, term string, subject string, number string) (
 
 		statusStr := s.Find("span.sr-only").Text()
 
-		cbi.Status, _ = map[string]ClassStatus{
-			"Open":      ClassStatusOpen,
-			"Wait List": ClassStatusClosedWaitlist,
-			"Closed":    ClassStatusClosed,
-		}[statusStr]
+		var ok bool
+		cbi.Status, ok = statusStrStatusMap[statusStr]
+
+		if !ok {
+			return
+		}
 
 		title := s.Find("h2 > a")
 
@@ -128,7 +121,7 @@ func SearchClasses(c *http.Client, term string, subject string, number string) (
 			return
 		}
 
-		cbi.Spaces, err = strconv.Atoi(enrolledNums[1])
+		cbi.Capacity, err = strconv.Atoi(enrolledNums[1])
 
 		if err != nil {
 			return
@@ -136,16 +129,15 @@ func SearchClasses(c *http.Client, term string, subject string, number string) (
 
 		cnbrLink := s.Find("div > a")
 
-		var ok bool
 		cbi.DetailsURL, ok = cnbrLink.Attr("href")
 
 		if !ok {
 			return
 		}
 
-		cbi.Instructor = stringSubmatchNoError(s.Find("div.col-xs-6").Eq(1).Text(), prefixRegex)
-		cbi.Location = stringSubmatchNoError(s.Find(".col-xs-12 > .col-xs-6").Eq(0).Text(), prefixRegex)
-		cbi.TimeDay = stringSubmatchNoError(s.Find(".col-xs-12 > .col-xs-6").Eq(1).Text(), prefixRegex)
+		cbi.Instructor = stringRemovePrefix(s.Find("div.col-xs-6").Eq(1).Text())
+		cbi.Location = stringRemovePrefix(s.Find(".col-xs-12 > .col-xs-6").Eq(0).Text())
+		cbi.TimeDay = stringRemovePrefix(s.Find(".col-xs-12 > .col-xs-6").Eq(1).Text())
 
 		cbis = append(cbis, cbi)
 	})
