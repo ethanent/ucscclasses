@@ -45,7 +45,7 @@ type SearchOptions struct {
 	// Term is required
 	Term               string
 
-	// Subject is required
+	// Subject is an optional selector. Use "" to ignore.
 	Subject            string
 
 	// Number is an optional selector. Use "" to ignore.
