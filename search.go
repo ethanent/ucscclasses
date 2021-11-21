@@ -34,18 +34,43 @@ type ClassBriefInfo struct {
 	Capacity   int
 }
 
-func SearchClasses(c *http.Client, term string, subject string, number string) ([]*ClassBriefInfo, error) {
+type SearchMethod string
+
+const (
+	SearchMethodEqual    SearchMethod = "="
+	SearchMethodContains SearchMethod = "contains"
+)
+
+type SearchOptions struct {
+	// Term is required
+	Term               string
+
+	// Subject is required
+	Subject            string
+
+	// Number is an optional selector. Use "" to ignore.
+	Number             string
+	NumberSearchMethod SearchMethod
+
+	// GE is an optional selector. Use "" to ignore.
+	GE                 string
+
+	// Title is an optional selector. Use "" to ignore.
+	Title              string
+}
+
+func SearchClasses(c *http.Client, opt *SearchOptions) ([]*ClassBriefInfo, error) {
 	fData := map[string]string{
 		"action":                   "results",
-		"binds[:term]":             term,
+		"binds[:term]":             opt.Term,
 		"binds[:reg_status]":       "all",
-		"binds[:subject]":          subject,
-		"binds[:catalog_nbr_op]":   "=",
-		"binds[:catalog_nbr]":      number,
-		"binds[:title]":            "",
+		"binds[:subject]":          opt.Subject,
+		"binds[:catalog_nbr_op]":   string(opt.NumberSearchMethod),
+		"binds[:catalog_nbr]":      opt.Number,
+		"binds[:title]":            opt.Title,
 		"binds[:instr_name_op]":    "=",
 		"binds[:instructor]":       "",
-		"binds[:ge]":               "",
+		"binds[:ge]":               opt.GE,
 		"binds[:crse_units_op]":    "=",
 		"binds[:crse_units_from]":  "",
 		"binds[:crse_units_to]":    "",
