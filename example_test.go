@@ -47,7 +47,7 @@ func ExampleSearchClasses() {
 	// You can use the DetailsURL of a CBI to retrieve class details using the Details function
 }
 
-func ExampleDetails() {
+func ExampleGetClassDetails() {
 	// You can get a DetailsURL from a search result or elsewhere
 	exampleDetailsURL := "https://pisa.ucsc.edu/class_search/index.php?action=detail&class_data=YToyOntzOjU6IjpTVFJNIjtzOjQ6IjIyMjAiO3M6MTA6IjpDTEFTU19OQlIiO3M6NToiNDQ1NzkiO30%253D"
 
