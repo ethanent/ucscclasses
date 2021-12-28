@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 type ClassStatus string
@@ -15,6 +16,16 @@ const (
 	ClassStatusClosed         ClassStatus = "Closed"
 )
 
+type RegistrationStatus string
+
+const (
+	// RegistrationStatusAll includes open and closed courses
+	RegistrationStatusAll RegistrationStatus = "all"
+
+	// RegistrationStatusOpen only includes open courses
+	RegistrationStatusOpen RegistrationStatus = "O"
+)
+
 var statusStrStatusMap = map[string]ClassStatus{
 	"Open":      ClassStatusOpen,
 	"Wait List": ClassStatusClosedWaitlist,
@@ -23,9 +34,23 @@ var statusStrStatusMap = map[string]ClassStatus{
 
 type ClassBriefInfo struct {
 	// AKA ClassNumber (not to be confused with number for search)
-	ID         string
+	ID string
+
 	DetailsURL string
-	Name       string
+
+	// Title, eg. "CSE 13S - 01 Comp Sys and C Prog"
+	FullTitle string
+
+	// Full number, eg. "CSE 13S - 01".
+	// Note that this is not to be confused with Number or ID. It just differentiates the specific class from other
+	// classes of the same subject and number.
+	FullNumber string
+
+	// Name, eg. "Comp Sys and C Prog"
+	Name string
+
+	Subject    string
+	Number     string
 	Location   string
 	TimeDay    string
 	Instructor string
@@ -43,27 +68,37 @@ const (
 
 type SearchOptions struct {
 	// Term is required
-	Term               string
+	Term string
 
 	// Subject is an optional selector. Use "" to ignore.
-	Subject            string
+	Subject string
 
 	// Number is an optional selector. Use "" to ignore.
 	Number             string
 	NumberSearchMethod SearchMethod
 
-	// GE is an optional selector. Use "" to ignore.
-	GE                 string
+	// RegistrationStatus is the registrability of a course
+	// Leave as nil to use RegistrationStatusAll
+	RegistrationStatus *RegistrationStatus
 
-	// Title is an optional selector. Use "" to ignore.
-	Title              string
+	// GE is an optional selector. Use "" to ignore.
+	GE string
+
+	// Title (title keyword) is an optional selector. Use "" to ignore.
+	Title string
 }
 
 func SearchClasses(c *http.Client, opt *SearchOptions) ([]*ClassBriefInfo, error) {
+	useRegStatus := RegistrationStatusAll
+
+	if opt.RegistrationStatus != nil {
+		useRegStatus = *opt.RegistrationStatus
+	}
+
 	fData := map[string]string{
 		"action":                   "results",
 		"binds[:term]":             opt.Term,
-		"binds[:reg_status]":       "all",
+		"binds[:reg_status]":       string(useRegStatus),
 		"binds[:subject]":          opt.Subject,
 		"binds[:catalog_nbr_op]":   string(opt.NumberSearchMethod),
 		"binds[:catalog_nbr]":      opt.Number,
@@ -105,19 +140,13 @@ func SearchClasses(c *http.Client, opt *SearchOptions) ([]*ClassBriefInfo, error
 	doc.Find("div.panel-default").Each(func(i int, s *goquery.Selection) {
 		cbi := &ClassBriefInfo{}
 
-		classNumberFR := s.Find(`form > input`)
+		classDetailInputs := s.Find(`form input`)
 
-		if classNumberFR.Length() < 22 {
+		if classDetailInputs.Length() < 22 {
 			return
 		}
 
-		classNumberAttrs := classNumberFR.Get(2).Attr
-
-		if len(classNumberAttrs) < 3 {
-			return
-		}
-
-		cbi.ID = classNumberAttrs[2].Val
+		cbi.ID = classDetailInputs.Eq(2).AttrOr("value", "")
 
 		statusStr := s.Find("span.sr-only").Text()
 
@@ -130,7 +159,18 @@ func SearchClasses(c *http.Client, opt *SearchOptions) ([]*ClassBriefInfo, error
 
 		title := s.Find("h2 > a")
 
-		cbi.Name = cleanString(title.Text())
+		cbi.FullTitle = title.Text()
+		titleSplit := strings.Split(cbi.FullTitle, "\u00A0\u00A0\u00A0")
+
+		if len(titleSplit) > 1 {
+			cbi.FullNumber = titleSplit[0]
+			cbi.Name = titleSplit[1]
+		}
+
+		cbi.FullTitle = cleanString(cbi.FullTitle)
+
+		cbi.Subject, _ = classDetailInputs.Eq(15).Attr("value")
+		cbi.Number, _ = classDetailInputs.Eq(4).Attr("value")
 
 		enrolledText := s.Find("div.row").Children().Eq(3).Text()
 
@@ -152,7 +192,7 @@ func SearchClasses(c *http.Client, opt *SearchOptions) ([]*ClassBriefInfo, error
 			return
 		}
 
-		cnbrLink := s.Find("div > a")
+		cnbrLink := s.Find("div a").Eq(1)
 
 		cbi.DetailsURL, ok = cnbrLink.Attr("href")
 
@@ -162,7 +202,7 @@ func SearchClasses(c *http.Client, opt *SearchOptions) ([]*ClassBriefInfo, error
 
 		cbi.Instructor = stringRemovePrefix(s.Find("div.col-xs-6").Eq(1).Text())
 		cbi.Location = stringRemovePrefix(s.Find(".col-xs-12 > .col-xs-6").Eq(0).Text())
-		cbi.TimeDay = stringRemovePrefix(s.Find(".col-xs-12 > .col-xs-6").Eq(1).Text())
+		cbi.TimeDay = cleanString(stringRemovePrefix(s.Find(".col-xs-12 > .col-xs-6").Eq(1).Text()))
 
 		cbis = append(cbis, cbi)
 	})

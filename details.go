@@ -24,8 +24,22 @@ type DiscussionSection struct {
 
 type ClassDetails struct {
 	// AKA ClassNumber (not to be confused with number for search.
-	ID                     string
-	Name                   string
+	ID string
+
+	// Title, eg. "CSE 13S - 01 Comp Sys and C Prog"
+	FullTitle string
+
+	// Full number, eg. "CSE 13S - 01".
+	// Note that this is not to be confused with Number or ID. It just differentiates the specific class from other
+	// classes of the same subject and number.
+	FullNumber string
+
+	// Name, eg. "Computer Systems and C Programming"
+	Name string
+
+	Subject string
+	Number  string
+
 	Status                 ClassStatus
 	Capacity               int
 	Enrolled               int
@@ -49,6 +63,9 @@ type ClassDetails struct {
 }
 
 var unitsRegex = regexp.MustCompile(`([0-9]+) units`)
+
+var classFullTitleRegex = regexp.MustCompile(`^([A-Za-z]+) ([0-9][A-Za-z0-9]*) - ([0-9]+) (.+)$`)
+
 var discussionSectionIDNameRegex = regexp.MustCompile(`#([0-9]+) (.+)`)
 
 func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
@@ -73,7 +90,16 @@ func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
 	dds := doc.Find("dd")
 
 	details.ID = dds.Eq(2).Text()
-	details.Name = cleanString(doc.Find("h2").Eq(0).Text())
+	details.FullTitle = cleanString(doc.Find("h2").Eq(0).Text())
+
+	sm := classFullTitleRegex.FindStringSubmatch(details.FullTitle)
+
+	if len(sm) > 4 {
+		details.Subject = sm[1]
+		details.Number = sm[2]
+		details.FullNumber = details.Subject + " " + details.Number + " - " + sm[3]
+		details.Name = sm[4]
+	}
 
 	var ok bool
 	details.Status, ok = statusStrStatusMap[cleanString(dds.Eq(6).Text())]

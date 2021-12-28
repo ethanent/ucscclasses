@@ -7,7 +7,7 @@ import (
 )
 
 var numberRegex = regexp.MustCompile(`[0-9]+`)
-var multispaceRegex = regexp.MustCompile(`(?:\s){2,}`)
+var multispaceRegex = regexp.MustCompile(`(?:\s|\\u00A0){2,}`)
 var prefixRegex = regexp.MustCompile(`[A-Za-z0-9]: (.+)`)
 var unexpectedCharsRegex = regexp.MustCompile(`[^A-Za-z0-9_\-:"() ,./']`)
 
@@ -26,11 +26,11 @@ func stringRemovePrefix(s string) string {
 }
 
 func cleanString(s string) string {
-	unexpectedCharCorrected := unexpectedCharsRegex.ReplaceAllString(s, "")
+	multispaceCorrected := multispaceRegex.ReplaceAllString(s, " ")
 
-	multispaceCorrected := multispaceRegex.ReplaceAllString(unexpectedCharCorrected, " ")
+	unexpectedCharCorrected := unexpectedCharsRegex.ReplaceAllString(multispaceCorrected, "")
 
-	return strings.Trim(multispaceCorrected, "\n \t")
+	return strings.Trim(unexpectedCharCorrected, "\n \t")
 }
 
 func extractStringNumbers(s string, expected int) []int {
