@@ -2,9 +2,10 @@ package ucscclasses_test
 
 import (
 	"fmt"
-	"github.com/ethanent/ucscclasses"
 	"net/http"
 	"time"
+
+	"github.com/ethanent/ucscclasses"
 )
 
 var c = &http.Client{Timeout: time.Second * 5}
@@ -57,12 +58,16 @@ func ExampleGetClassDetails() {
 		panic(err)
 	}
 
-	fmt.Println(details.FullTitle)
+	fmt.Printf("%s %s: %s\n", details.Subject, details.Number, details.Name)
 	fmt.Println(details.Instructor)
-	fmt.Println("Desc:", details.Description)
-	fmt.Println(details.Enrolled, "/", details.Capacity)
+	fmt.Printf("Description: %s\n", details.Description)
+	fmt.Printf("Enrollment: %d / %d\n", details.Enrolled, details.Capacity)
+
+	fmt.Printf("Waitlist: %d / %d\n", details.WaitlistTotal, details.WaitlistCapacity)
+
+	fmt.Println("Sections:")
 
 	for _, ds := range details.DiscussionSections {
-		fmt.Println(ds.Name, ds.Location, "(", ds.Enrolled, "/", ds.Capacity, ")")
+		fmt.Printf("  %s %s (%d / %d)\n", ds.Name, ds.Location, ds.Enrolled, ds.Capacity)
 	}
 }

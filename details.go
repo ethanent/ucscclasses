@@ -2,11 +2,13 @@ package ucscclasses
 
 import (
 	"errors"
-	"github.com/PuerkitoBio/goquery"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 type DiscussionSection struct {
@@ -102,34 +104,34 @@ func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
 	}
 
 	var ok bool
-	details.Status, ok = statusStrStatusMap[cleanString(dds.Eq(6).Text())]
+	details.Status, ok = statusStrStatusMap[cleanString(dds.Eq(7).Text())]
 
 	if !ok {
-		return nil, errors.New("unexpected class status")
+		return nil, fmt.Errorf("while parsing detail status: unexpected status")
 	}
 
-	details.Capacity, err = strconv.Atoi(dds.Eq(8).Text())
+	details.Capacity, err = strconv.Atoi(dds.Eq(9).Text())
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("while parsing detail capacity: %w", err)
 	}
 
-	details.Enrolled, err = strconv.Atoi(dds.Eq(9).Text())
+	details.Enrolled, err = strconv.Atoi(dds.Eq(10).Text())
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("while parsing detail enrolled: %w", err)
 	}
 
-	details.WaitlistTotal, err = strconv.Atoi(dds.Eq(11).Text())
+	details.WaitlistTotal, err = strconv.Atoi(dds.Eq(12).Text())
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("while parsing detail waitlist total: %w", err)
 	}
 
-	details.WaitlistCapacity, err = strconv.Atoi(dds.Eq(10).Text())
+	details.WaitlistCapacity, err = strconv.Atoi(dds.Eq(11).Text())
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("while parsing detail waitlist capacity: %w", err)
 	}
 
 	pbs := doc.Find(".panel > .panel-body")
@@ -147,7 +149,7 @@ func GetClassDetails(c *http.Client, detailsURL string) (*ClassDetails, error) {
 		details.ClassNotes = ""
 	}
 
-	unitsStr := dds.Eq(4).Text()
+	unitsStr := dds.Eq(5).Text()
 	unitsRegexRes := unitsRegex.FindStringSubmatch(unitsStr)
 
 	if unitsRegexRes == nil || len(unitsRegexRes) < 2 {
